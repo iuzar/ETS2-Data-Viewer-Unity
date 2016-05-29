@@ -7,5 +7,5 @@ It connects to [@Funbit's](https://github.com/Funbit/) [Telemetry Server](https:
 
 Screenshot:
 
-![Imgur](http://i.imgur.com/bhO3Z1g.jpg)
+![Imgur](http://i.imgur.com/GE94gKQ.jpg)
 
