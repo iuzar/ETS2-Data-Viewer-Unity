@@ -17,25 +17,91 @@ public class FetchData : MonoBehaviour {
     public Text next_restText;
     public Text cargoText;
     public Text fuelText;
-    public Text addressText;
-    public Toggle NOK_EnabledToggle;
-
-    public bool NOK_Enabled = false;
+    public Text timeText;
+    public Text gameText;    
     public bool connected = false;
 
     public object stuff;
     public string jsonText = null;
     public bool cantConnectToTelemetryServer;
-    public string ip;
+
+    public bool monochrome = false;
 
     public Data data = new Data();
 
     private bool isFetching = false;
     private bool isUpdating = false;
 
+    [System.Serializable]
+    public class Settings
+    {
+        public bool NOK_Enabled = false;
+        public string address = "localhost";
+        public int port = 25555;
+        public InputField portText;
+        public Toggle NOK_EnabledToggle;
+        public InputField addressText;
+        public Text addressReadOnlyText;
+
+        public void SaveSettings()
+        {
+            NOK_Enabled = NOK_EnabledToggle.isOn;
+            address = addressText.text;
+
+            PlayerPrefs.SetString("NOK_Enabled", NOK_Enabled.ToString());
+            PlayerPrefs.SetString("address", address);
+            PlayerPrefs.SetInt("port", port);
+            PlayerPrefs.Save();
+
+            UpdateTexts();
+        }
+
+        public void UpdateTexts()
+        {
+            if (NOK_EnabledToggle != null)
+            {
+                NOK_EnabledToggle.isOn = NOK_Enabled;
+            }
+            if (addressText != null)
+            {
+                addressText.text = address;
+                addressReadOnlyText.text = address;
+            }
+            if (portText != null)
+            {
+                portText.text = port.ToString();
+            }
+        }
+
+        public void LoadSettings()
+        {
+            if (PlayerPrefs.HasKey("NOK_Enabled"))
+            {
+                string nok_enabledString = PlayerPrefs.GetString("NOK_Enabled");
+                Debug.Log("NOK Enabled string setting = " + nok_enabledString);
+                NOK_Enabled = bool.Parse(nok_enabledString); 
+            }
+            if (PlayerPrefs.HasKey("address"))
+            {
+                address = PlayerPrefs.GetString("address");                 
+            }
+            if (PlayerPrefs.HasKey("port"))
+            {
+                port = PlayerPrefs.GetInt("port");                 
+            }
+
+            UpdateTexts();
+        }
+    }
+
+    public Settings settings = new Settings();
+
     // Use this for initialization
-    void Start () {
-        ToggleNOK();
+    void Start ()
+    {
+        LoadSettings();
+        settings.UpdateTexts();
+        UpdateToggle();
         Application.targetFrameRate = 10;
     }
 
@@ -59,14 +125,26 @@ public class FetchData : MonoBehaviour {
         }
 	}
 
+    public void UpdateToggle()
+    {
+        if (settings.NOK_EnabledToggle != null)
+        {
+            settings.NOK_EnabledToggle.isOn = settings.NOK_Enabled; 
+        }
+    }
+
     public void ToggleNOK ()
     {
-        NOK_Enabled = NOK_EnabledToggle.isOn;
+        if (settings.NOK_EnabledToggle != null)
+        {
+            settings.NOK_Enabled = settings.NOK_EnabledToggle.isOn; 
+        }
     }
 
     public void Connect()
     {
-        ip = addressText.text;
+        settings.address = settings.addressText.text;
+        settings.addressReadOnlyText.text = settings.address;
         Fetch();
         if (!cantConnectToTelemetryServer)
         {
@@ -85,7 +163,7 @@ public class FetchData : MonoBehaviour {
         wc.Encoding = Encoding.UTF8;
         try
         {
-            string address = "http://" + ip + ":25555/api/ets2/telemetry";
+            string address = "http://" + settings.address + ":" + settings.port + "/api/ets2/telemetry";
             //jsonText = wc.DownloadString("http://localhost:25555/api/ets2/telemetry");
             jsonText = wc.DownloadString(address);
         }
@@ -130,6 +208,13 @@ public class FetchData : MonoBehaviour {
         float timeScale = data.Game.TimeScale;
         int velocity = (int) data.Truck.Speed;
 
+        string gameName = data.Game.GameName;
+        string gameVersion = data.Game.Version;
+
+        DateTime time = data.Game.Time;
+
+        string timeString = time.ToString("ddd") +" " + time.Hour.ToString("0#") + ":" + time.Minute.ToString("0#");
+
         string deadlineHourString = (deadline.Hour > 0) ? (deadline.Hour + " hours ") : "";
 
         // ETA realtime:
@@ -139,11 +224,11 @@ public class FetchData : MonoBehaviour {
         {
             float minutesToAdd = (float)(eta.Hour * 60) / timeScale;
             etaRT += minutesToAdd;
-            etaRTString = "(</color><b><color=yellow>Real Time: " + (int)etaRT + " minutes</color></b><color=green>)</color>";
+            etaRTString = "(<b>Real Time: " + (int)etaRT + " minutes</b>)";
         }
         else
         {
-            etaRTString = "(</color><b><color=yellow>Real Time: " + (int)((float)eta.Hour / timeScale) + " hours " + (int)etaRT + " minutes</color></b><color=green>)</color>";
+            etaRTString = "(Real Time: " + (int)((float)eta.Hour / timeScale) + " hours " + (int)etaRT + " minutes</b>)";
         }
 
         int fuelLeftPercent = (int)((fuelLeft / maxFuel) * 100);
@@ -154,7 +239,7 @@ public class FetchData : MonoBehaviour {
         }
 
         string jobPayString = null;
-        if (NOK_Enabled)
+        if (settings.NOK_Enabled)
         {
             jobPay *= 8.6f;
             jobPayString = jobPay.ToString("C0", CultureInfo.CreateSpecificCulture("nb-NO"));
@@ -164,27 +249,75 @@ public class FetchData : MonoBehaviour {
             jobPayString = jobPay.ToString("C0", CultureInfo.CreateSpecificCulture("fr-FR"));
         }
 
-        string SourceRichString = "<b><color=yellow>Source: </color></b><color=green>" + source + "</color>";
-        string DestinationRichString = "<b><color=yellow>Destination: </color></b><color=green>" + destination + "</color>";
+        string SourceRichString = "<b>Source: </b>" + source;
+        string DestinationRichString = "<b>Destination: </b>" + destination;
         string DeadLineRichString =
-            "<b><color=yellow>Deadline in: </color></b><color=green>" +
-            deadlineHourString + deadline.Minute + " minutes " + "(</color><b><color=yellow>" + jobPayString + "</color></b><color=green>)</color>";
-        string ETARichString = "<b><color=yellow>ETA: </color></b><color=green>" + eta.Hour + " hours " + eta.Minute + " minutes " + etaRTString;
+            "<b>Deadline in: </b>" +
+            deadlineHourString + deadline.Minute + " minutes " + "(<b>" + jobPayString + "</b>)";
+        string ETARichString = "<b>ETA: </b>" + eta.Hour + " hours " + eta.Minute + " minutes " + etaRTString;
 
-        string DistanceRichString = "<b><color=yellow>Distance: </color></b><color=green>" + distance + " kilometers </color>";
-        string CargoRichString = "<b><color=yellow>Cargo: </color></b><color=green>" + cargo + "</color>";
-        string FuelRichString = "<b><color=yellow>Fuel: </color></b><color=green>" + (int) fuelLeft + " / " + (int) maxFuel+ " (</color><b><color=yellow>" + fuelLeftPercent + "%</color></b><color=green>)</color>";
+        string DistanceRichString = "<b>Distance: </b>" + distance + " kilometers ";
+        string CargoRichString = "<b>Cargo: </b>" + cargo;
+        string FuelRichString = "<b>Fuel: </b>" + (int) fuelLeft + " / " + (int) maxFuel+ " (<b>" + fuelLeftPercent + "%</b>)";
 
-        sourceText.text = SourceRichString;
-        destinationText.text = DestinationRichString;
-        deadlineText.text = DeadLineRichString;
-        etaText.text = ETARichString;
-        distanceText.text = DistanceRichString;
-        cargoText.text = CargoRichString;
-        fuelText.text = FuelRichString;
+        string TimeRichString = "<b>" + timeString + "</b>";
 
-        speed_limitText.text = speedLimit.ToString();
+        string GameRichString = "<b>" + gameName + " v" + gameVersion + "</b>";
+
+        if (sourceText != null)
+        {
+            sourceText.text = SourceRichString; 
+        }
+        if (destinationText != null)
+        {
+            destinationText.text = DestinationRichString; 
+        }
+        if (deadlineText != null)
+        {
+            deadlineText.text = DeadLineRichString; 
+        }
+        if (etaText != null)
+        {
+            etaText.text = ETARichString; 
+        }
+        if (distanceText != null)
+        {
+            distanceText.text = DistanceRichString; 
+        }
+        if (cargoText != null)
+        {
+            cargoText.text = CargoRichString; 
+        }
+        if (fuelText != null)
+        {
+            fuelText.text = FuelRichString; 
+        }
+
+        if (speed_limitText != null)
+        {
+            speed_limitText.text = speedLimit.ToString(); 
+        }
+
+        if (timeText != null)
+        {
+            timeText.text = TimeRichString;
+        }
+
+        if (gameText != null)
+        {
+            gameText.text = GameRichString;
+        }
 
         isUpdating = false;
+    }
+
+    public void SaveSettings()
+    {
+        settings.SaveSettings();
+    }
+
+    public void LoadSettings()
+    {
+        settings.LoadSettings();
     }
 }

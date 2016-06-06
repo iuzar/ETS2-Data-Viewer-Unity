@@ -83,6 +83,7 @@ public class Game
     private DateTime nextRest;
     private string version;
     private string telemetryPluginVersion;
+    private string gameName;
 
     [JsonProperty("paused")]
     public bool Paused
@@ -144,6 +145,19 @@ public class Game
         set
         {
             version = value;
+        }
+    }
+
+    [JsonProperty("gameName")]
+    public string GameName
+    {
+        get
+        {
+            return gameName;
+        }
+        set
+        {
+            gameName = value;
         }
     }
 
