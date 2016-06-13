@@ -180,6 +180,11 @@ public class Truck
     private float speed;
     private float fuel;
     private float fuelCapacity;
+    private float oilTemperature;
+    private float odometer;
+    private int gear;
+    private float cruiseControlSpeed;
+    private float waterTemperature;
 
     [JsonProperty("speed")]
     public float Speed
@@ -220,6 +225,76 @@ public class Truck
         set
         {
             fuelCapacity = value;
+        }
+    }
+
+    [JsonProperty("oilTemperature")]
+    public float OilTemperature
+    {
+        get
+        {
+            return oilTemperature;
+        }
+
+        set
+        {
+            oilTemperature = value;
+        }
+    }
+
+    [JsonProperty("odometer")]
+    public float Odometer
+    {
+        get
+        {
+            return odometer;
+        }
+
+        set
+        {
+            odometer = value;
+        }
+    }
+
+    [JsonProperty("gear")]
+    public int Gear
+    {
+        get
+        {
+            return gear;
+        }
+
+        set
+        {
+            gear = value;
+        }
+    }
+
+    [JsonProperty("cruiseControlSpeed")]
+    public float CruiseControlSpeed
+    {
+        get
+        {
+            return cruiseControlSpeed;
+        }
+
+        set
+        {
+            cruiseControlSpeed = value;
+        }
+    }
+
+    [JsonProperty("waterTemperature")]
+    public float WaterTemperature
+    {
+        get
+        {
+            return waterTemperature;
+        }
+
+        set
+        {
+            waterTemperature = value;
         }
     }
 }

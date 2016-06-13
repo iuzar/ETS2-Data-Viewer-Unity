@@ -13,12 +13,21 @@ public class FetchData : MonoBehaviour {
     public Text deadlineText;
     public Text etaText;
     public Text distanceText;
+    public Text distanceText2;
     public Text speed_limitText;
     public Text next_restText;
     public Text cargoText;
     public Text fuelText;
     public Text timeText;
-    public Text gameText;    
+    public Text gameText;
+    public Text gearText;
+    public Text oilTempText;
+    public Text waterTempText;
+    public Text cruiseControlText;
+    public Text odometerText;
+    public Text fuelLeftText;
+    public Text speedText;
+
     public bool connected = false;
 
     public object stuff;
@@ -306,6 +315,41 @@ public class FetchData : MonoBehaviour {
         if (gameText != null)
         {
             gameText.text = GameRichString;
+        }
+
+        if (gearText != null)
+        {
+            gearText.text = "D" + data.Truck.Gear;
+        }
+
+        if (oilTempText != null)
+        {
+            oilTempText.text = (int) data.Truck.OilTemperature + " C";
+        }
+        if (waterTempText != null)
+        {
+            waterTempText.text = (int) data.Truck.WaterTemperature + " C";
+        }
+        if (cruiseControlText != null)
+        {
+            cruiseControlText.text = (int) data.Truck.CruiseControlSpeed + " km/h";
+        }
+        if (odometerText != null)
+        {
+            odometerText.text = (int) data.Truck.Odometer + " km";
+        }
+        if (fuelLeftText != null)
+        {
+            fuelLeftText.text = (int) data.Truck.Fuel + " l";
+        }
+        if (speedText != null)
+        {
+            speedText.text = "<size=85>" + (int)data.Truck.Speed + "</size> km /h";
+        }
+
+        if (distanceText2 != null)
+        {
+            distanceText2.text = "GPS: " + distance.ToString("# ###") + " km";
         }
 
         isUpdating = false;
